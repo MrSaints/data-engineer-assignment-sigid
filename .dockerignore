@@ -1,0 +1,5 @@
+.idea
+.mypy_cache
+*.log
+__pycache__
+.ipynb_checkpoints
