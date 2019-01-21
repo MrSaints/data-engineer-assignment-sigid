@@ -26,7 +26,8 @@ if __name__ == "__main__":
     # Test data
     test_signatures: List[AnyNewSignature] = [
         NewImageSignature(local_uri="/tmp/does_not_actually_exist"),
-        NewXYZSignature(x=1.0, y=2.0, z=3.0),
+        # [ (X, Y, Z) ... n ]
+        NewXYZSignature(points=[(1.0, 2.0, 3.0), (4.0, 5.0, 6.0)]),
     ]
 
     # Use test data

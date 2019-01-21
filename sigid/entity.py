@@ -1,12 +1,13 @@
+import abc
 from datetime import datetime
-from typing import List, Mapping, Optional, Union
+from typing import List, Mapping, Optional, Tuple, Union
 
 import pydantic
 import ulid
 from typing_extensions import Protocol
 
 
-class BaseSignature(pydantic.BaseModel):
+class BaseSignature(pydantic.BaseModel, abc.ABC):
     signee_id: str
 
 
@@ -27,10 +28,14 @@ class ImageSignature(BaseSignature):
         return v or datetime.utcnow()
 
 
-class XYZSignature(BaseSignature):
+class XYZPoint(pydantic.BaseModel):
     x: float
     y: float
     z: float
+
+
+class XYZSignature(BaseSignature):
+    points: List[XYZPoint]
 
     id: Optional[str]
     created: Optional[datetime]
@@ -66,5 +71,10 @@ class Signee(pydantic.BaseModel):
     def new_image_signature(self, asset_id: str) -> ImageSignature:
         return ImageSignature(signee_id=self.id, asset_id=asset_id)
 
-    def new_xyz_signature(self, x: float, y: float, z: float) -> XYZSignature:
-        return XYZSignature(signee_id=self.id, x=x, y=y, z=z)
+    def new_xyz_signature(
+        self, points=List[Tuple[float, float, float]]
+    ) -> XYZSignature:
+        transformed_points = [
+            XYZPoint(x=point[0], y=point[1], z=point[2]) for point in points
+        ]
+        return XYZSignature(signee_id=self.id, points=transformed_points)

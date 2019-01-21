@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Union
+import abc
+from typing import Dict, List, Optional, Tuple, Union
 
 import pydantic
 import ulid
@@ -7,7 +8,7 @@ from typing_extensions import Protocol
 from sigid.entity import AnySignature, Signee
 
 
-class BaseNewSignature(pydantic.BaseModel):
+class BaseNewSignature(pydantic.BaseModel, abc.ABC):
     metadata: Optional[Dict[str, str]] = {}
 
 
@@ -16,9 +17,7 @@ class NewImageSignature(BaseNewSignature):
 
 
 class NewXYZSignature(BaseNewSignature):
-    x: float
-    y: float
-    z: float
+    points: List[Tuple[float, float, float]]
 
 
 AnyNewSignature = Union[NewImageSignature, NewXYZSignature]
@@ -64,17 +63,17 @@ class SignatureApplicationService:
         signatures: List[AnySignature] = []
 
         for new_signature in new_signatures:
-
             if isinstance(new_signature, NewImageSignature):
                 asset_id = self.asset_service.register_asset(
                     local_uri=new_signature.local_uri, metadata=new_signature.metadata
                 )
                 signatures.append(new_signee.new_image_signature(asset_id=asset_id))
-            else:
+            elif isinstance(new_signature, NewXYZSignature):
                 signatures.append(
-                    new_signee.new_xyz_signature(
-                        x=new_signature.x, y=new_signature.y, z=new_signature.z
-                    )
+                    new_signee.new_xyz_signature(points=new_signature.points)
                 )
+            else:
+                # TODO: better exception
+                raise
 
         self.signature_repository.store(signatures)
